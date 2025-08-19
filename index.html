@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ตู้ล็อกเกอร์ออนไลน์</title>
+</head>
+<body>
+  <h1>ตู้ล็อกเกอร์ออนไลน์</h1>
+  <button onclick="addLocker()">➕ เพิ่มล็อกเกอร์</button>
+  <div id="lockers"></div>
+
+  <script>
+    async function loadLockers() {
+      const res = await fetch("/api/lockers");
+      const data = await res.json();
+      const div = document.getElementById("lockers");
+      div.innerHTML = "";
+      data.forEach(locker => {
+        div.innerHTML += `
+          <div>
+            <b>Locker ${locker.id}</b> - ${locker.locked ? "🔒 Locked" : "🔓 Open"}
+            <button onclick="openLocker(${locker.id})">เปิด</button>
+          </div>
+        `;
+      });
+    }
+
+    async function addLocker() {
+      const password = prompt("ตั้งรหัสล็อกเกอร์");
+      await fetch("/api/lockers", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ password })
+      });
+      loadLockers();
+    }
+
+    async function openLocker(id) {
+      const password = prompt("ใส่รหัสล็อกเกอร์ (ถ้าลืมปิดไม่ต้องใส่)");
+      const res = await fetch("/api/open", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("เปิดสำเร็จ! ไฟล์ในล็อกเกอร์: " + JSON.stringify(data.files));
+      } else {
+        alert("รหัสผิด!");
+      }
+    }
+
+    loadLockers();
+  </script>
+</body>
+</html>
